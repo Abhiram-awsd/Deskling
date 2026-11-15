@@ -1,0 +1,15 @@
+{
+  "name": "deskling",
+  "version": "0.1.0",
+  "description": "A tiny desktop figurine that keeps you focused.",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}
