@@ -14,7 +14,7 @@
     eyes: { label: 'Rest your eyes', text: 'Eye break. Look at something far away for 20 seconds.', yes: 'Done', stat: 'eyes', every: 20, on: true },
     posture: { label: 'Check posture', text: 'Posture check. Shoulders down, back straight.', yes: 'Fixed it', stat: null, every: 30, on: false },
   };
-  const SIZES = { s: 76, m: 104, l: 136 };
+  const SIZES = { s: 52, m: 72, l: 96 };
   const CHEERS = ['Done. Next.', 'One down.', 'Clean work.', 'That is how it is done.', 'Knocked out.'];
   const PATS = ['Locked in?', 'Pick one task and start the timer.', 'Small steps still count.', 'You have got this.', 'What is the next move?'];
 
@@ -60,7 +60,33 @@
     if (t.phase !== 'idle' && !t.paused) return 'happy';
     return h >= 23 || h < 5 ? 'sleep' : 'idle';
   }
-  function face() { fig.set({ char: S.char, look: S.look, expr: now() < ui.flashUntil ? ui.flash : baseExpr() }); }
+  // ---- motion: body moves, eye direction and little particles
+  const figEl = $('#fig'), calm = matchMedia('(prefers-reduced-motion: reduce)');
+  let animT = 0;
+  function anim(name, ms) {
+    for (const c of [...figEl.classList]) if (c.startsWith('a-')) figEl.classList.remove(c);
+    void figEl.offsetWidth; figEl.classList.add('a-' + name);
+    clearTimeout(animT); if (ms) animT = setTimeout(() => figEl.classList.remove('a-' + name), ms);
+  }
+  function look(x, y) { figEl.style.setProperty('--lx', x); figEl.style.setProperty('--ly', y); }
+  const CONFETTI = ['#ffd23f', '#3df0ff', '#ff5d73', '#7dff8a', '#b79bff'];
+  function burst(kind, n) {
+    if (calm.matches) return;
+    const px = SIZES[S.size];
+    for (let i = 0; i < n; i++) {
+      const p = document.createElement('i'); p.className = 'p p-' + kind;
+      if (kind === 'star') p.textContent = '\u2726'; else if (kind === 'z') p.textContent = 'z';
+      p.style.setProperty('--dx', ((Math.random() * 2 - 1) * px * 0.5).toFixed(0) + 'px');
+      p.style.setProperty('--dy', (-(8 + Math.random() * 20)).toFixed(0) + 'px');
+      p.style.setProperty('--r', ((Math.random() * 2 - 1) * 200).toFixed(0) + 'deg');
+      p.style.setProperty('--d', (i * 0.04).toFixed(2) + 's');
+      p.style.setProperty('--c', kind === 'confetti' ? CONFETTI[i % CONFETTI.length] : kind === 'star' ? Buddy.byId(S.char).glow : '');
+      pet.appendChild(p); setTimeout(() => p.remove(), 2600);
+    }
+  }
+  function ring() { pet.classList.remove('ring'); void pet.offsetWidth; pet.classList.add('ring'); setTimeout(() => pet.classList.remove('ring'), 800); }
+
+  function face() { pet.style.setProperty('--glow', Buddy.byId(S.char).glow); fig.set({ char: S.char, look: S.look, expr: now() < ui.flashUntil ? ui.flash : baseExpr() }); }
   function flash(expr, ms = 1800, hop) {
     ui.flash = expr; ui.flashUntil = now() + ms; face(); setTimeout(face, ms + 30);
     if (hop) { pet.classList.remove('hop'); void pet.offsetWidth; pet.classList.add('hop'); setTimeout(() => pet.classList.remove('hop'), 1100); }
@@ -83,8 +109,8 @@
   // ---- window layout: the window is only ever as big as what is on screen
   function layout() {
     const px = SIZES[S.size]; document.documentElement.style.setProperty('--size', px + 'px');
-    const pw = px + 24, ph = px + 34;
-    const st = ui.panel ? [348, ph + 440, false] : ui.bubble ? [296, ph + 170, false] : [Math.max(pw, 110), ph, true];
+    const pw = px + 44, ph = px + 58; // room for hops and sparks
+    const st = ui.panel ? [348, ph + 440, false] : ui.bubble ? [296, ph + 170, false] : [Math.max(pw, 96), ph, true];
     const visible = S.mode !== 'hide' || ui.panel || !!ui.bubble;
     const key = st.join() + visible;
     if (key === ui.stageKey) return;
@@ -100,6 +126,7 @@
     const b = (ui.bubble = ui.queue.shift());
     if (b.expr) flash(b.expr, 2200, b.hop);
     if (b.sound) chime(b.sound === 'up');
+    if (b.buttons && !b.hop) anim('wave', 950);
     b.timer = setTimeout(() => closeBubble(b, true), b.ttl);
     render();
   }
@@ -115,6 +142,7 @@
   const left = () => { const t = S.timer; return t.phase === 'idle' ? S.pomo.focus * MIN : t.paused ? t.left : t.endsAt - now(); };
   function start(phase) {
     Object.assign(S.timer, { phase, endsAt: now() + S.pomo[phase] * MIN, paused: false, left: 0 });
+    if (phase === 'focus') { anim('power', 700); ring(); } else anim('stretch', 900);
     save(); face(); render();
   }
   function pause() { const t = S.timer; if (t.phase === 'idle') return; if (t.paused) { t.endsAt = now() + t.left; t.paused = false; } else { t.left = t.endsAt - now(); t.paused = true; } save(); face(); render(); }
@@ -125,6 +153,7 @@
       const d = today(); d.pomos++; d.focus += S.pomo.focus; t.count++;
       const long = t.count % S.pomo.every === 0, n = streak();
       start(long ? 'long' : 'short');
+      setTimeout(() => { anim('cheer', 1250); burst('confetti', 12); }, 50);
       const hit = d.pomos === S.goal ? ` That is your goal of ${S.goal} for today.` : '';
       say(`Session ${d.pomos} done.${hit} ${long ? 'Take a long' : 'Take a short'} break, ${S.pomo[long ? 'long' : 'short']} minutes.` + (d.pomos === 1 && n > 1 ? ` Streak: ${n} days.` : ''),
         { ttl: 12000, expr: 'happy', hop: true, sound: 'up', buttons: [{ label: 'Skip break', fn: stop }] });
@@ -179,7 +208,7 @@
   function setMode(m) { S.mode = m; save(); if (m === 'walk') Shell.dock(); else stopWalk(0); ui.stageKey = ''; render(); }
 
   // ---- heartbeat (one tick a second, sent by the shell so nothing spins while idle)
-  let blinkAt = now() + 3000;
+  let blinkAt = now() + 3000, idleAt = now() + 9000, zAt = 0;
   function tick() {
     const t = S.timer;
     if (t.phase !== 'idle' && !t.paused && t.endsAt <= now()) finish();
@@ -187,6 +216,15 @@
     if (now() > blinkAt && now() > ui.flashUntil && baseExpr() !== 'sleep') {
       blinkAt = now() + 2500 + Math.random() * 4000;
       fig.set({ expr: 'blink' }); setTimeout(face, 140);
+    }
+    const quiet = !ui.panel && !ui.bubble && !walk.on && !drag && now() > ui.flashUntil;
+    if (quiet && baseExpr() === 'sleep' && now() > zAt) { zAt = now() + 2600; burst('z', 1); }
+    if (quiet && baseExpr() !== 'sleep' && now() > idleAt) {
+      idleAt = now() + 7000 + Math.random() * 13000;
+      const act = pick(['glance', 'glance', 'tilt', 'stretch', 'shiver', 'peek']);
+      if (act === 'glance') { look(Math.random() < 0.5 ? -2 : 2, 0); setTimeout(() => look(0, 0), 1300); }
+      else if (act === 'peek') { look(0, -1.6); anim('stretch', 900); setTimeout(() => look(0, 0), 1100); }
+      else anim(act, act === 'shiver' ? 520 : 950);
     }
   }
   function paintClock() {
@@ -303,7 +341,7 @@
     if (c === 'todo') {
       const x = S.todos.find((t) => t.id === el.dataset.id); if (!x) return;
       x.done = el.checked; today().tasks = Math.max(0, today().tasks + (x.done ? 1 : -1));
-      if (x.done) { if (S.timer.task === x.id) S.timer.task = ''; flash('happy', 1600, true); chime(true); ui.queue.push({ text: pick(CHEERS), ttl: 3500 }); }
+      if (x.done) { if (S.timer.task === x.id) S.timer.task = ''; flash('happy', 1600); anim('cheer', 850); burst('confetti', 10); chime(true); ui.queue.push({ text: pick(CHEERS), ttl: 3500 }); }
       render();
     } else if (c === 'task') S.timer.task = el.value;
     else if (c === 'intent') today().intent = el.value.trim();
@@ -324,19 +362,31 @@
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ui.panel) closePanel(); });
 
   // ---- the figurine itself: click to open, drag to move, right-click for a pat
-  let down = null;
-  pet.addEventListener('mousedown', (e) => { if (e.button === 0) down = { x: e.screenX, y: e.screenY, moved: false }; });
+  let down = null, drag = false, clicks = [];
+  pet.addEventListener('mousedown', (e) => { if (e.button === 0) { down = { x: e.screenX, y: e.screenY, moved: false }; anim('squash'); } });
+  pet.addEventListener('mouseenter', () => { if (!drag && !down && !walk.on) anim('perk', 360); });
+  function landed() { drag = false; down = null; ui.flashUntil = 0; face(); anim('land', 480); burst('dust', 4); }
   window.addEventListener('mousemove', (e) => {
+    if (drag && !e.buttons) landed();
+    const r = pet.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height * 0.45);
+    const d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 40) * 2;
+    look(((dx / d) * k).toFixed(1), ((dy / d) * k * 0.7).toFixed(1));
     if (!down || down.moved || Math.abs(e.screenX - down.x) + Math.abs(e.screenY - down.y) < 5) return;
     down.moved = true;
-    if (!ui.panel && !ui.bubble) { stopWalk(8000); Shell.drag(); }
+    if (!ui.panel && !ui.bubble) { stopWalk(8000); drag = true; ui.flash = 'wow'; ui.flashUntil = now() + 60000; face(); anim('drag'); Shell.drag(); }
+    else anim('boing', 460);
   });
+  document.addEventListener('mouseleave', () => look(0, 0));
+  window.addEventListener('mouseup', () => { if (drag) landed(); });
   pet.addEventListener('click', () => {
     const moved = down && down.moved; down = null; if (moved) return;
+    clicks = clicks.filter((t) => now() - t < 1200); clicks.push(now());
+    if (clicks.length >= 4) { clicks = []; flash('wow', 1300); anim('dizzy', 1100); burst('star', 5); return; }
+    anim('boing', 460);
     if (ui.bubble) closeBubble(); else ui.panel ? closePanel() : openPanel();
   });
   pet.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ui.panel ? closePanel() : openPanel(); } });
-  pet.addEventListener('contextmenu', (e) => { e.preventDefault(); if (!ui.panel && !ui.bubble) say(pick(PATS), { ttl: 4000, expr: 'happy', hop: true }); });
+  pet.addEventListener('contextmenu', (e) => { e.preventDefault(); if (!ui.panel && !ui.bubble) { say(pick(PATS), { ttl: 4000, expr: 'happy' }); const a = pick(['flip', 'spin', 'wiggle']); anim(a, 800); burst('star', 6); } });
   document.addEventListener('contextmenu', (e) => e.preventDefault());
   pill.addEventListener('click', pause);
 

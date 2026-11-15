@@ -11,10 +11,10 @@ A tiny figurine that lives on your desktop and keeps you on track. Windows, macO
 - **Reminders** – water, stretch, eye rest, posture. They wait until your focus session ends.
 - **Days** – streak, focus minutes for the last 7 days, and today's tally.
 - **Morning check-in and evening recap.**
-- **10 characters × 3 looks** – Bolt, Kage, Nova, Rex, Fang, Finn, Sir Tin, Bones, Zorp, Blaze, each in pixel, soft or neon.
+- **10 characters × 3 looks** – Bolt, Nova, Fang, Bones, Rook, Strix, Nimbo, Inky, Frost, Echo, each in pixel, soft or neon.
 - **3 ways to live on screen** – sits where you drag it, walks along the bottom of the screen, or hides in the tray and pops out only for reminders.
 
-Click the figurine to open the panel. Drag it to move it. Right-click it for a pat.
+Click the figurine to open the panel. Drag it to move it. Right-click it for a trick. Its eyes follow your pointer, and it reacts to hovers, clicks, drops, finished tasks and focus sessions.
 
 ![The panel](docs/panel.png)
 
