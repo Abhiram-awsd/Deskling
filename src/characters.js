@@ -19,16 +19,17 @@
 
   const INK = '#2b2438', WHITE = '#ffffff', BLUSH = '#ff8fa6';
 
-  // shape = [path, fill, stroke, strokeWidth]; colours are palette keys or hex
+  // shape = [path, fill, stroke, strokeWidth, part]; colours are palette keys or hex.
+  // `part` (tail, earL, earR, flopL, flopR, lamp, tongue) makes that shape move on its own; see style.css.
   // optional `over` shapes are drawn on top of the face (teeth, visors...)
   const CHARS = [
     { id: 'bolt', name: 'Bolt', kind: 'robot', glow: '#3df0ff',
       pal: { a: '#8f9bbd', b: '#5f6a90', c: '#3df0ff', d: '#1a1f38' },
       face: { x: [25.5, 38.5], y: 27, r: 2.8, my: 32, mouth: 'smile', ink: 'c', brow: false },
       body: [
-        [R(31, 6, 2, 8), 'd'], [R(28.5, 3.5, 7, 4, 1.5), 'c'],
+        [R(31, 6, 2, 8), 'd'], [R(28.5, 3.5, 7, 4, 1.5), 'c', null, 0, 'lamp'],
         [R(7, 22, 7, 13, 2), 'b'], [R(50, 22, 7, 13, 2), 'b'],
-        [R(19, 43, 26, 13, 4), 'b'], [R(27, 47, 10, 4, 1.5), 'd'], [R(28.5, 48.2, 4, 1.6, 0.8), 'c'],
+        [R(19, 43, 26, 13, 4), 'b'], [R(27, 47, 10, 4, 1.5), 'd'], [R(28.5, 48.2, 4, 1.6, 0.8), 'c', null, 0, 'lamp'],
         [R(21, 54.5, 9, 4, 1.5), 'd'], [R(34, 54.5, 9, 4, 1.5), 'd'],
         [R(13, 13, 38, 31, 7), 'a'], [R(17, 19, 30, 19, 4), 'd'],
       ] },
@@ -38,98 +39,38 @@
       body: [
         [R(11, 32, 42, 20, 6), 'b'],
         [D(32, 34, 15.5, 57), 'a'],
-        [R(27, 46, 10, 6, 2), 'c'],
+        [R(27, 46, 10, 6, 2), 'c', null, 0, 'lamp'],
         [R(21, 54.5, 9, 4, 2), 'b'], [R(34, 54.5, 9, 4, 2), 'b'],
         [E(32, 26, 20.5, 19), 'a'],
         [R(16.5, 16.5, 31, 20, 9.5), 'd'],
         ['M21,23q2.5,-3.5 8,-4', null, 'f', 2],
       ] },
-    { id: 'fang', name: 'Fang', kind: 'wolf', glow: '#9fc4ff',
-      pal: { a: '#76819a', b: '#4d566e', d: '#2c3145', w: '#e8ecf4' },
-      face: { x: [24, 40], y: 32.5, r: 2.8, my: 45.5, mouth: 'smile', nose: 42 },
+    { id: 'miso', name: 'Miso', kind: 'cat', glow: '#ffb45c',
+      pal: { a: '#f0a55a', b: '#c9772f', d: '#7a4520', w: '#fff3df' },
+      face: { x: [24, 40], y: 35, r: 3, my: 42, mouth: 'cat', brow: false },
       body: [
-        ['M46,55C60,55 63,42 56,33C56,43 52,46 45,47Z', 'b'],
-        ['M11,29L12,5L29,20Z', 'a'], ['M53,29L52,5L35,20Z', 'a'],
-        ['M14.5,22L14.8,11L22,17.5Z', 'd'], ['M49.5,22L49.2,11L42,17.5Z', 'd'],
+        ['M47,53q12,-1 9,-16', null, 'b', 5, 'tail'],
+        ['M13,28L15,8L30,20Z', 'a', null, 0, 'earL'], ['M51,28L49,8L34,20Z', 'a', null, 0, 'earR'],
+        ['M17.5,21.5L18.5,13.5L24.5,18.5Z', 'd', null, 0, 'earL'], ['M46.5,21.5L45.5,13.5L39.5,18.5Z', 'd', null, 0, 'earR'],
+        [D(32, 18, 21, 57), 'a'],
+        ['M27,20.5v5M32,19.5v6M37,20.5v5', null, 'b', 2.2],
+        ['M12.5,36h4M12.8,41h3.6M51.5,36h-4M51.2,41h-3.6', null, 'b', 1.8],
+        [E(32, 49.5, 9.5, 6.5), 'w'],
+        [E(24.5, 56, 4.5, 2.4), 'w'], [E(39.5, 56, 4.5, 2.4), 'w'],
+      ],
+      over: [['M30.6,39.2h2.8l-1.4,1.8Z', 'd']] },
+    { id: 'biscuit', name: 'Biscuit', kind: 'dog', glow: '#ffd27a',
+      pal: { a: '#d9a066', b: '#8a5a36', c: '#2f6bff', e: '#ffd23f', w: '#fff3df', t: '#ff6b81' },
+      face: { x: [24, 40], y: 32.5, r: 2.9, my: 45, mouth: 'smile', nose: 41, brow: false },
+      body: [
+        ['M47,51q10,-3 9,-15', null, 'a', 5, 'tail'],
         [D(32, 17, 21, 57), 'a'],
-        ['M32,22L27,16h10Z', 'b'],
-        ['M32,38C26,34 15,37 12,44C15,54 25,57 32,57C39,57 49,54 52,44C49,37 38,34 32,38Z', 'w'],
-      ] },
-    { id: 'bones', name: 'Bones', kind: 'skull', glow: '#d8fff2',
-      pal: { a: '#f1ede2', b: '#353a58', d: '#b9b3a2' },
-      face: { x: [24, 40], y: 28, r: 5, my: 40, mouth: 'none', hl: false, brow: false },
-      body: [
-        [D(32, 44, 13, 58), 'b'],
-        [R(21.5, 38, 21, 12.5, 4), 'a'],
-        [R(13, 10, 38, 32, 15), 'a'],
-        ['M27,44.5v6M32,44.5v6M37,44.5v6', null, 'd', 1.5],
+        [E(40.5, 32.5, 6.8, 7.4), 'b'],
+        [E(32, 44.5, 9, 6.5), 'w'],
+        ['M14.6,50.5Q32,56.5 49.4,50.5', null, 'c', 3.2], [E(32, 55.6, 2.3), 'e'],
+        ['M15,21C7,23 6,36 10,42C15,40 19,31 20,23Z', 'b', null, 0, 'flopL'], ['M49,21C57,23 58,36 54,42C49,40 45,31 44,23Z', 'b', null, 0, 'flopR'],
       ],
-      over: [['M32,34.5l-2.3,4.2h4.6Z', 'ink']] },
-    { id: 'rook', name: 'Rook', kind: 'raccoon', glow: '#c8d2ff',
-      pal: { a: '#8a90a2', b: '#646a7e', d: '#262a3a', w: '#eef0f6', e: '#f6f7fb' },
-      face: { x: [24, 40], y: 31.5, r: 2.5, my: 46, mouth: 'smile', nose: 42.5, ink: 'e', brow: false },
-      body: [
-        ['M46,55C60,55 63,42 56,33C56,43 52,46 45,47Z', 'a'], ['M49.5,50.5l5,2.5M54,43.5l5,1', null, 'd', 2.6],
-        [E(16.5, 20, 6.5), 'a'], [E(47.5, 20, 6.5), 'a'], [E(16.5, 20, 3.2), 'd'], [E(47.5, 20, 3.2), 'd'],
-        [D(32, 17, 21, 57), 'a'],
-        ['M12.5,31C18,24.5 27,25.5 32,29.5C37,25.5 46,24.5 51.5,31C49,38.5 40,38.5 32,35C24,38.5 15,38.5 12.5,31Z', 'd'],
-        [E(32, 45.5, 8.5, 6), 'w'],
-      ],
-      over: [[E(32, 42.5, 2.3, 1.7), 'd'], ['M29,46q3,3 6,0', null, 'd', 1.7]] },
-    { id: 'strix', name: 'Strix', kind: 'owl', glow: '#ffb45c',
-      pal: { a: '#7d5b45', b: '#5a3f30', c: '#ff9a2e', w: '#f4e4c4' },
-      face: { x: [24, 40], y: 31, r: 3.3, my: 40, mouth: 'none', brow: false },
-      body: [
-        ['M12,36C6,43 7,51 12,54C13,47 15,42 17,39Z', 'b'], ['M52,36C58,43 57,51 52,54C51,47 49,42 47,39Z', 'b'],
-        ['M13,25L14,7L28,18Z', 'a'], ['M51,25L50,7L36,18Z', 'a'],
-        [D(32, 15, 20.5, 57), 'a'],
-        [E(32, 49, 11.5, 7), 'w'], ['M27,46l2.5,2l2.5,-2l2.5,2l2.5,-2M29.5,50.5l2.5,2l2.5,-2', null, 'a', 1.2],
-        [E(24, 31, 8.2), 'w'], [E(40, 31, 8.2), 'w'],
-        [E(25.5, 57, 4.5, 2), 'c'], [E(38.5, 57, 4.5, 2), 'c'],
-      ],
-      over: [['M29.3,35.5h5.4l-2.7,5Z', 'c']] },
-    { id: 'nimbo', name: 'Nimbo', kind: 'storm cloud', glow: '#ffe45c', float: true,
-      pal: { a: '#5f6a8c', b: '#47506e', c: '#ffd93b' },
-      face: { x: [25, 39], y: 31, r: 2.6, my: 37, mouth: 'smile', ink: 'c', brow: false },
-      body: [
-        ['M34,43l-7,9h4.5l-2.5,7.5l9,-11h-5l3,-5.5Z', 'c'],
-        ['M16,44C8,44 6,34 12.5,30C11.5,22 20.5,17 27,21C31,11.5 45.5,12.5 47.5,23C55.5,23 59.5,33 53.5,40C51.5,43 48.5,44 45,44Z', 'a'],
-        ['M18,40.5h10M38,40.5h9', null, 'b', 2],
-      ] },
-    { id: 'inky', name: 'Inky', kind: 'octopus', glow: '#b79bff',
-      pal: { a: '#7658d1', b: '#5a3fb0', w: '#c9b8ff' },
-      face: { x: [25, 39], y: 30, r: 3, my: 37.5, mouth: 'smile' },
-      body: [
-        ['M17,42q-3,9 -9,8', null, 'a', 6], ['M47,42q3,9 9,8', null, 'a', 6],
-        ['M25,45q-1,9 -7,10.5', null, 'a', 6], ['M39,45q1,9 7,10.5', null, 'a', 6],
-        ['M32,46v9', null, 'a', 6],
-        [D(32, 11, 19.5, 48), 'a'],
-        [E(20, 21, 2), 'b'], [E(44.5, 19, 1.6), 'b'], [E(41, 15.5, 1.1), 'b'],
-        [E(8.5, 50, 1.3), 'w'], [E(55.5, 50, 1.3), 'w'],
-      ] },
-    { id: 'frost', name: 'Frost', kind: 'yeti', glow: '#9fe3ff',
-      pal: { a: '#e9f2fb', b: '#c3d5e8', f: '#7f9fc2', h: '#51607f' },
-      face: { x: [25, 39], y: 33, r: 2.6, my: 41, mouth: 'wide' },
-      body: [
-        ['M16,24L8,9L24,17Z', 'h'], ['M48,24L56,9L40,17Z', 'h'],
-        ['M11,40C4,43 4,51 9,54C10,48 12,46 15,44Z', 'b'], ['M53,40C60,43 60,51 55,54C54,48 52,46 49,44Z', 'b'],
-        [D(32, 14, 21.5, 57), 'a'],
-        ['M32,24.5C24,22 16.5,27 16.5,35.5C16.5,44 24,48.5 32,48.5C40,48.5 47.5,44 47.5,35.5C47.5,27 40,22 32,24.5Z', 'f'],
-        ['M27,15.5l2.5,4l2.5,-4l2.5,4l2.5,-4', null, 'b', 1.6],
-        [E(24.5, 56.5, 5.5, 2.3), 'b'], [E(39.5, 56.5, 5.5, 2.3), 'b'],
-      ],
-      over: [['M25.5,45.4l1.6,-3.2l1.6,3.2Z', 'white'], ['M35.3,45.4l1.6,-3.2l1.6,3.2Z', 'white']] },
-    { id: 'echo', name: 'Echo', kind: 'bat', glow: '#d59bff', float: true,
-      pal: { a: '#4b4070', b: '#342b52', c: '#c58be0', w: '#6f629a', e: '#ffe45c' },
-      face: { x: [25, 39], y: 32, r: 3, my: 41, mouth: 'smile', ink: 'e', brow: false },
-      body: [
-        ['M15,31L1,21L5,35L1,45L15,45Z', 'b'], ['M49,31L63,21L59,35L63,45L49,45Z', 'b'],
-        ['M14,26L15,4L30,18Z', 'a'], ['M50,26L49,4L34,18Z', 'a'],
-        ['M17.5,20L18,10L25,16.5Z', 'c'], ['M46.5,20L46,10L39,16.5Z', 'c'],
-        [D(32, 16, 19.5, 57), 'a'],
-        [E(32, 50, 9.5, 5.5), 'w'],
-      ],
-      over: [['M28,43.3l1.3,2.6l1.3,-2.6Z', 'white'], ['M33.4,43.3l1.3,2.6l1.3,-2.6Z', 'white']] },
+      over: [['M30,46.6h4v3.2a2,2 0 0 1 -4,0Z', 't', null, 0, 'tongue']] },
   ];
 
   // ---- face: drawn by the engine so every figurine shares the same expressions
@@ -174,8 +115,8 @@
   }
 
   function shapesFor(ch, expr) {
-    const body = ch.body.map(([d, fill, stroke, w]) => ({ d, fill, stroke, w }));
-    const over = (ch.over || []).map(([d, fill, stroke, w]) => ({ d, fill, stroke, w, over: true }));
+    const body = ch.body.map(([d, fill, stroke, w, part]) => ({ d, fill, stroke, w, part }));
+    const over = (ch.over || []).map(([d, fill, stroke, w, part]) => ({ d, fill, stroke, w, part, over: true }));
     return body.concat(faceShapes(ch, expr), over);
   }
 
@@ -202,22 +143,24 @@
     const seen = new Set();
     for (const s of shapes) {
       if (!!s.face !== inFace) { body += s.face ? '<g class="f">' : '</g>'; inFace = !!s.face; }
+      let piece = '';
+      const flush = () => { body += s.part ? piece.replaceAll('<path ', `<path class="pt-${s.part}" `) : piece; };
       const fill = col(ch, s.fill), stroke = col(ch, s.stroke);
       if (look === 'neon') {
         if (s.hl || s.soft) continue;
         if (s.face) {
           const c = ch.glow;
-          body += fill
+          piece += fill
             ? `<path d="${s.d}" fill="${c}"/>`
             : `<path d="${s.d}" fill="none" stroke="${c}" stroke-width="${s.w}" stroke-linecap="round" stroke-linejoin="round"/>`;
         } else if (fill && s.over) {
-          body += `<path d="${s.d}" fill="${neonize(fill, ch.glow)}"/>`;
+          piece += `<path d="${s.d}" fill="${neonize(fill, ch.glow)}"/>`;
         } else if (fill) {
-          body += `<path d="${s.d}" fill="#17142a" fill-opacity=".92" stroke="${neonize(fill, ch.glow)}" stroke-width="1.5" stroke-linejoin="round"/>`;
+          piece += `<path d="${s.d}" fill="#17142a" fill-opacity=".92" stroke="${neonize(fill, ch.glow)}" stroke-width="1.5" stroke-linejoin="round"/>`;
         } else {
-          body += `<path d="${s.d}" fill="none" stroke="#17142a" stroke-width="${s.w + 1.6}" stroke-linecap="round"/><path d="${s.d}" fill="none" stroke="${neonize(stroke, ch.glow)}" stroke-width="1.5" stroke-linecap="round"/>`;
+          piece += `<path d="${s.d}" fill="none" stroke="#17142a" stroke-width="${s.w + 1.6}" stroke-linecap="round"/><path d="${s.d}" fill="none" stroke="${neonize(stroke, ch.glow)}" stroke-width="1.5" stroke-linecap="round"/>`;
         }
-        continue;
+        flush(); continue;
       }
       const op = s.o ? ` opacity="${s.o}"` : '';
       if (fill) {
@@ -230,10 +173,11 @@
           }
           paint = `url(#${id})`;
         }
-        body += `<path d="${s.d}" fill="${paint}"${op}/>`;
+        piece += `<path d="${s.d}" fill="${paint}"${op}/>`;
       } else {
-        body += `<path d="${s.d}" fill="none" stroke="${stroke}" stroke-width="${s.w}" stroke-linecap="round" stroke-linejoin="round"${op}/>`;
+        piece += `<path d="${s.d}" fill="none" stroke="${stroke}" stroke-width="${s.w}" stroke-linecap="round" stroke-linejoin="round"${op}/>`;
       }
+      flush();
     }
     if (inFace) body += '</g>';
     return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>${defs}</defs>${body}</svg>`;
@@ -251,7 +195,8 @@
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, N, N); ctx.scale(N / 64, N / 64);
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     const pal = [];
-    for (const s of ch.body.concat(ch.over || []).map(([d, fill, stroke, w]) => ({ d, fill, stroke, w }))) {
+    for (const s of ch.body.concat(ch.over || []).map(([d, fill, stroke, w, part]) => ({ d, fill, stroke, w, part }))) {
+      if (s.part === 'tongue' && expr !== 'happy' && expr !== 'wow') continue;
       const p = new Path2D(s.d), c = col(ch, s.fill) || col(ch, s.stroke);
       if (!pal.includes(c)) pal.push(c);
       if (s.fill) { ctx.fillStyle = c; ctx.fill(p); }
@@ -317,9 +262,15 @@
       el.classList.toggle('floats', !!ch.float);
       if (cur.look === 'pixel') {
         let c = el.querySelector('canvas');
-        if (!c) { el.innerHTML = '<canvas width="32" height="32"></canvas>'; c = el.firstChild; }
+        if (!c) { el.innerHTML = '<canvas width="32" height="32"></canvas>'; c = el.firstChild; el.dataset.key = ''; }
         c.getContext('2d').putImageData(pixelData(ch, cur.expr), 0, 0);
-      } else el.innerHTML = svg(ch, cur.expr, cur.look);
+      } else {
+        const html = svg(ch, cur.expr, cur.look), g = el.querySelector('g.f'), key = cur.char + cur.look;
+        const m = /<g class="f">([\s\S]*?)<\/g>/.exec(html);
+        if (g && m && el.dataset.key === key) g.innerHTML = m[1]; else el.innerHTML = html;
+        el.dataset.key = key;
+      }
+      el.dataset.expr = cur.expr;
     }
     draw();
     return { set(p) { let ch = false; for (const k in p) if (cur[k] !== p[k]) { cur[k] = p[k]; ch = true; } if (ch) draw(); }, get: () => cur };

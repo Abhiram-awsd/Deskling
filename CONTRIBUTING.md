@@ -11,6 +11,7 @@ Characters live in `src/characters.js` in the `CHARS` list. You describe a figur
 4. `face` says where the eyes (`x`, `y`, radius `r`) and mouth (`my`) go. Expressions (blink, happy, focus, sleep) come for free.
    Keep it left-right symmetric around x = 32.
 5. `glow` is the neon colour.
+6. Optional: give a shape a fifth value (`tail`, `earL`, `earR`, `flopL`, `flopR`, `lamp`, `tongue`) and it moves on its own.
 
 Open `src/index.html` in a browser, go to Buddy, and check your character in Pixel, Soft and Neon.
 

@@ -16,6 +16,8 @@
   };
   const SIZES = { s: 52, m: 72, l: 96 };
   const CHEERS = ['Done. Next.', 'One down.', 'Clean work.', 'That is how it is done.', 'Knocked out.'];
+  const VOICE = { bolt: ['Beep boop.', 'Systems green.'], nova: ['Houston, we are focused.', 'Zero gravity, zero excuses.'], miso: ['Purr.', 'Mrrp?'], biscuit: ['Woof!', 'Throw the ball. Then do the task.'] };
+  const TRICK = { bolt: 'flip', nova: 'spin', miso: 'stretch', biscuit: 'chase' };
   const PATS = ['Locked in?', 'Pick one task and start the timer.', 'Small steps still count.', 'You have got this.', 'What is the next move?'];
 
   // ---- state
@@ -323,7 +325,7 @@
     dnd: () => { S.dnd = now() < S.dnd ? 0 : now() + 60 * MIN; },
     del: (v, el) => { S.todos = S.todos.filter((x) => x.id !== el.dataset.id); },
     clear: () => { S.todos = S.todos.filter((x) => !x.done); },
-    char: (v) => { S.char = v; face(); },
+    char: (v) => { S.char = v; face(); anim('boing', 460); burst('star', 5); },
     look: (v) => { S.look = v; face(); },
     size: (v) => { S.size = v; ui.stageKey = ''; },
     mode: (v) => setMode(v),
@@ -364,7 +366,7 @@
   // ---- the figurine itself: click to open, drag to move, right-click for a pat
   let down = null, drag = false, clicks = [];
   pet.addEventListener('mousedown', (e) => { if (e.button === 0) { down = { x: e.screenX, y: e.screenY, moved: false }; anim('squash'); } });
-  pet.addEventListener('mouseenter', () => { if (!drag && !down && !walk.on) anim('perk', 360); });
+  pet.addEventListener('mouseenter', () => { if (drag || down || walk.on) return; anim('perk', 360); if (S.char === 'biscuit' && baseExpr() === 'idle') flash('happy', 1400); if (S.char === 'miso' && baseExpr() === 'idle') flash('sleep', 700); });
   function landed() { drag = false; down = null; ui.flashUntil = 0; face(); anim('land', 480); burst('dust', 4); }
   window.addEventListener('mousemove', (e) => {
     if (drag && !e.buttons) landed();
@@ -386,7 +388,7 @@
     if (ui.bubble) closeBubble(); else ui.panel ? closePanel() : openPanel();
   });
   pet.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ui.panel ? closePanel() : openPanel(); } });
-  pet.addEventListener('contextmenu', (e) => { e.preventDefault(); if (!ui.panel && !ui.bubble) { say(pick(PATS), { ttl: 4000, expr: 'happy' }); const a = pick(['flip', 'spin', 'wiggle']); anim(a, 800); burst('star', 6); } });
+  pet.addEventListener('contextmenu', (e) => { e.preventDefault(); if (!ui.panel && !ui.bubble) { say(pick((VOICE[S.char] || []).concat(PATS)), { ttl: 4000, expr: 'happy' }); anim(pick([TRICK[S.char] || 'flip', TRICK[S.char] || 'flip', 'wiggle']), 1000); burst('star', 6); } });
   document.addEventListener('contextmenu', (e) => e.preventDefault());
   pill.addEventListener('click', pause);
 
