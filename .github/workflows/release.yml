@@ -1,7 +1,5 @@
 name: Release
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
 
 jobs:
@@ -40,7 +38,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: Deskling ${{ github.ref_name }}
-          releaseDraft: true
+          # __VERSION__ is read from src-tauri/tauri.conf.json; the release is published straight away
+          # so the in-app update check and the download link can see it.
+          tagName: v__VERSION__
+          releaseName: Deskling v__VERSION__
+          releaseBody: Download the installer for your system below. Windows and macOS will warn that the app is unsigned; see the README for how to open it.
+          releaseDraft: false
           args: ${{ matrix.args }}

@@ -4,9 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Deskling</title>
+<meta name="description" content="A tiny desk buddy that keeps you focused: focus timer, tasks, reminders and streaks. Free and open source.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<!-- shown only when this page is opened in a browser (the web demo) -->
+<header id="demo">
+  <h1>Deskling</h1>
+  <p>A tiny desk buddy that keeps you focused. This is the live demo: click the buddy at the bottom, right-click it for a trick, start a focus session.</p>
+  <p class="links">
+    <a class="btn go" href="https://github.com/Abhiram-awsd/Deskling/releases/latest">Download the app</a>
+    <a class="btn" href="https://github.com/Abhiram-awsd/Deskling">Star it on GitHub</a>
+    <button class="btn" id="demo-quick">Quick add</button>
+  </p>
+  <p class="fine">The desktop app sits on top of your other windows on Windows, macOS and Linux. In this demo, what you add stays in this browser.</p>
+</header>
 <main id="stage">
   <section id="above" hidden></section>
   <div id="pet" role="button" tabindex="0" aria-label="Open Deskling"><div id="fig"></div></div>

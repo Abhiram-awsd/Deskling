@@ -20,3 +20,7 @@ Open `src/index.html` in a browser, go to Buddy, and check your character in Pix
 - Keep it light: no frameworks, no build step, no image assets, no network calls.
 - No always-running timers in the page. Hook into `tick()` in `src/app.js`.
 - Original characters only, nothing from existing games, films or brands.
+
+## Moving parts and expressions
+
+A fifth value on a shape makes it a moving part: `tail`, `earL`/`earR`, `flopL`/`flopR`, `footL`/`footR` (step while walking), `armL`/`armR`, `lamp`, `tongue`, `jet`. Add `move: 'hover'` to a character that should glide instead of walk. Every character gets all 13 expressions from the shared face code in `faceShapes`; add a new one there and in the pixel section below it.

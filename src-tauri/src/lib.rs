@@ -1,5 +1,5 @@
 //! Deskling's desktop shell. It does only what the web page cannot:
-//! size and move the transparent window, the tray icon, and a one-second heartbeat.
+//! size and move the transparent window, the tray icon, a global shortcut, and a one-second heartbeat.
 
 use std::{sync::Mutex, thread, time::Duration};
 use tauri::{
@@ -7,6 +7,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, State, WebviewWindow,
 };
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 /// Where the figurine's feet are (bottom-centre of the window, in physical pixels).
 /// The window grows upward from this point when a bubble or the panel opens,
@@ -113,6 +114,13 @@ fn hide_pet(win: WebviewWindow) -> Res<()> {
     win.hide().map_err(err)
 }
 
+/// Bring the window forward and give it the keyboard (for typing into quick add).
+#[tauri::command]
+fn focus_pet(win: WebviewWindow) -> Res<()> {
+    win.show().map_err(err)?;
+    win.set_focus().map_err(err)
+}
+
 #[tauri::command]
 fn quit(app: AppHandle) {
     app.exit(0);
@@ -124,6 +132,7 @@ fn tray(app: &tauri::App) -> tauri::Result<()> {
         app,
         &[
             &item("open", "Open Deskling")?,
+            &item("quick", "Quick add (Ctrl+Alt+Space)")?,
             &item("focus", "Start or pause focus")?,
             &PredefinedMenuItem::separator(app)?,
             &item("mode-sit", "Sit still")?,
@@ -163,6 +172,27 @@ fn tray(app: &tauri::App) -> tauri::Result<()> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Starting Deskling a second time wakes the one already running instead of adding another buddy.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(win) = app.get_webview_window("main") {
+                let _ = win.show();
+            }
+            let _ = app.emit("tray", "open");
+        }))
+        .plugin(tauri_plugin_opener::init())
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, _shortcut, event| {
+                    if event.state() == ShortcutState::Pressed {
+                        if let Some(win) = app.get_webview_window("main") {
+                            let _ = win.show();
+                            let _ = win.set_focus();
+                        }
+                        let _ = app.emit("tray", "quick");
+                    }
+                })
+                .build(),
+        )
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
@@ -172,7 +202,7 @@ pub fn run() {
             compact: true,
         })))
         .invoke_handler(tauri::generate_handler![
-            set_stage, walk_step, dock, show_pet, hide_pet, quit
+            set_stage, walk_step, dock, show_pet, hide_pet, focus_pet, quit
         ])
         .setup(|app| {
             // A desk toy has no business in the Dock or the app switcher.
@@ -192,6 +222,12 @@ pub fn run() {
                 }
             }
             tray(app)?;
+
+            // Ctrl+Alt+Space from anywhere opens quick add. If another app owns the keys, carry on without it.
+            let _ = app.global_shortcut().register(Shortcut::new(
+                Some(Modifiers::CONTROL | Modifiers::ALT),
+                Code::Space,
+            ));
 
             // One event a second drives the timer and reminders. The page keeps no
             // timers of its own, so an idle Deskling uses close to zero CPU.
