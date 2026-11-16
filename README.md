@@ -6,7 +6,7 @@ A tiny figurine that lives on your desktop and keeps you on track. Windows, macO
 
 ## Try it
 
-**[Open the live demo](https://deskling.vercel.app)** in your browser, no install needed. If you like it, a star helps.
+**[Open the live demo](https://deskling-six.vercel.app)** in your browser, no install needed. If you like it, a star helps.
 
 ## What it does
 
